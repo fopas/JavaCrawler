@@ -12,9 +12,9 @@ import java.util.concurrent.TimeoutException;
 public class Main {
 
     private static final String URL = "https://habr.com/ru/news/";
-    private static final String QUERY_LINK = "link";
-    private static final String QUERY_INFO_LINK = "info";
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    public static final String QUERY_LINK = "link";
+    public static final String QUERY_INFO = "info";
 
     public static void main(String[] args) throws Exception {
         logger.info("Start app");
@@ -37,15 +37,15 @@ public class Main {
 //        connection.close();
 
         channel.queueDeclare(QUERY_LINK, false, false, false, null);
-        channel.queueDeclare(QUERY_INFO_LINK, false, false, false, null);
+        channel.queueDeclare(QUERY_INFO, false, false, false, null);
         channel.close();
         connection.close();
 
         GetLink getLink = new GetLink(URL, factory, QUERY_LINK);
         getLink.run();
 
-//        Parser parser = new Parser(factory);
-//        parser.run();
+        Parser parser = new Parser(factory, QUERY_LINK, QUERY_INFO);
+        parser.run();
 //
 //        Thread linkThread = new Thread(getLink);
 //        Thread parserThread = new Thread(parser);
