@@ -28,13 +28,6 @@ public class Main {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-//        Connection connection = factory.newConnection();
-//        Channel channel = connection.createChannel();
-//        channel.queueDeclare("info", false, false, false, null);
-//        String message = "ААА";
-//        channel.basicPublish("", "info", null, message.getBytes());
-//        channel.close();
-//        connection.close();
 
         channel.queueDeclare(QUERY_LINK, false, false, false, null);
         channel.queueDeclare(QUERY_INFO, false, false, false, null);

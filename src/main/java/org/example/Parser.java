@@ -1,17 +1,15 @@
 package org.example;
 
-import com.google.gson.Gson;
 import com.rabbitmq.client.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class Parser {
 
@@ -27,7 +25,7 @@ public class Parser {
         this.queryInfo = queryInfo;
     }
 
-    private Article parseArticle(String url) {
+    private JSONObject parseArticle(String url, String hash) {
         try {
             Document doc = Jsoup.connect(url).get();
             String title = doc.select("h1.tm-title.tm-title_h1 span").text().trim();
@@ -35,7 +33,16 @@ public class Parser {
             String time = doc.select("span.tm-article-datetime-published time").attr("datetime");
             StringBuilder text = new StringBuilder();
             doc.select("div.article-formatted-body p").forEach(paragraph -> text.append(paragraph.text()).append("\n"));
-            return new Article(title, author, time, text.toString(), url);
+
+            JSONObject articleJson = new JSONObject();
+            articleJson.put("hash", hash);
+            articleJson.put("url", url);
+            articleJson.put("title", title);
+            articleJson.put("author", author);
+            articleJson.put("time", time);
+            articleJson.put("text", text.toString());
+
+            return articleJson;
         } catch (IOException e) {
             logger.error("Error parsing article from URL: " + url, e);
         }
@@ -45,12 +52,13 @@ public class Parser {
     private void handleDelivery(GetResponse delivery) throws IOException {
         try {
             String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            //написать сравнение hash
-            JsonObject jsonObject_link_hash = JsonParser.parseString(messageBody).getAsJsonObject();
-            String link = jsonObject_link_hash.get("link").getAsString();
-            Article article = parseArticle(link);
-            if (article != null) {
-                String json = new Gson().toJson(article);
+            JSONObject jsonObjectLinkHash = new JSONObject(messageBody);
+            String link = jsonObjectLinkHash.getString("link");
+            String hash = jsonObjectLinkHash.getString("hash");
+
+            JSONObject articleJson = parseArticle(link, hash);
+            if (articleJson != null) {
+                String json = articleJson.toString();
                 channel.basicPublish("", queryInfo, null, json.getBytes(StandardCharsets.UTF_8));
                 logger.info("Published article info: {}", json);
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
@@ -63,7 +71,7 @@ public class Parser {
 
     public void run() throws IOException, TimeoutException {
         Connection connection = factory.newConnection();
-        this.channel = connection.createChannel(); // Initialize the class-level channel
+        this.channel = connection.createChannel();
 
         try {
             channel.queueDeclare(queryLink, false, false, false, null);

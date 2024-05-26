@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -37,11 +39,36 @@ public class GetLink {
         return Base64.getEncoder().encodeToString(hashBytes);
     }
 
+    private Document getDocument(String url) throws IOException {
+        URL urlObj = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+
+        int statusCode = connection.getResponseCode();
+        switch (statusCode) {
+            case 200:
+                return Jsoup.parse(connection.getInputStream(), "UTF-8", url);
+            case 403:
+                logger.error("HTTP 403 Forbidden: Access is denied for URL {}", url);
+                throw new IOException("HTTP 403 Forbidden: Access is denied");
+            case 404:
+                logger.error("HTTP 404 Not Found: The requested URL {} was not found on this server", url);
+                throw new IOException("HTTP 404 Not Found: URL not found");
+            case 503:
+                logger.error("HTTP 503 Service Unavailable: The server is currently unable to handle the request for URL {}", url);
+                throw new IOException("HTTP 503 Service Unavailable: Service unavailable");
+            default:
+                logger.error("HTTP error code: {}", statusCode);
+                throw new IOException("HTTP error code: " + statusCode);
+        }
+    }
+
     public void run() {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
 
-            Document doc = Jsoup.connect(url).get();
+            Document doc = getDocument(url);
             Elements posts = doc.select("article.tm-articles-list__item");
 
             for (Element post : posts) {
