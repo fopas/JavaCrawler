@@ -61,7 +61,9 @@ services:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
     ports:
-      - "5500:5500"
+      - "5000:5000"
+      - "9600:9600"
+      - "9999:9999"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     #   networks:

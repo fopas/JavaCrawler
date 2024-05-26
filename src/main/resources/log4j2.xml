@@ -7,7 +7,7 @@
         </Console>
 
 
-        <Socket name="socket" host="localhost" port="9999" reconnectionDelayMillis="5000">
+        <Socket name="socket" host="127.0.0.1" port="9999" reconnectionDelayMillis="5000">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p %m%n"/>
         </Socket>
 

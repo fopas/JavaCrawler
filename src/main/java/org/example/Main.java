@@ -39,15 +39,13 @@ public class Main {
 
         Parser parser = new Parser(factory, QUERY_LINK, QUERY_INFO);
         parser.run();
-//
-//        Thread linkThread = new Thread(getLink);
-//        Thread parserThread = new Thread(parser);
-//
-//        linkThread.start();
-//        parserThread.start();
-//
-//        linkThread.join();
-//        parserThread.join();
+
+        ElasticSearchManager elasticsearchManager = new ElasticSearchManager();
+        elasticsearchManager.init();
+
+        PublishInfo publishInfo = new PublishInfo(factory, QUERY_INFO, elasticsearchManager);
+        publishInfo.run();
+
 
         logger.info("Service stopped");
     }
