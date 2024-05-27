@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
-public class Parser {
+public class Parser implements Runnable {
 
     private final ConnectionFactory factory;
     private final String queryLink;
@@ -73,8 +73,6 @@ public class Parser {
         return null;
     }
 
-
-
     private void handleDelivery(GetResponse delivery) throws IOException {
         try {
             String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -95,24 +93,29 @@ public class Parser {
         }
     }
 
-    public void run() throws IOException, TimeoutException {
-        Connection connection = factory.newConnection();
-        this.channel = connection.createChannel();
-
+    @Override
+    public void run() {
         try {
-            channel.queueDeclare(queryLink, false, false, false, null);
+            Connection connection = factory.newConnection();
+            this.channel = connection.createChannel();
 
-            GetResponse response = channel.basicGet(queryLink, false);
-            while (response != null) {
-                handleDelivery(response);
-                response = channel.basicGet(queryLink, false);
+            try {
+                channel.queueDeclare(queryLink, false, false, false, null);
+
+                GetResponse response = channel.basicGet(queryLink, false);
+                while (response != null) {
+                    handleDelivery(response);
+                    response = channel.basicGet(queryLink, false);
+                }
+
+            } catch (IOException e) {
+                logger.error("Error in run method", e);
+            } finally {
+                channel.close();
+                connection.close();
             }
-
-        } catch (IOException e) {
-            logger.error("Error in run method", e);
-        } finally {
-            channel.close();
-            connection.close();
+        } catch (IOException | TimeoutException e) {
+            logger.error("Error establishing connection", e);
         }
     }
 }
