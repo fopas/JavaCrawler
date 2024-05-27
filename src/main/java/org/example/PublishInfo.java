@@ -38,7 +38,7 @@ public class PublishInfo {
                 logger.info("Document with hash " + article.getHash() + " already exists in Elasticsearch. Skipping processing.");
             }
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            System.out.print("\naaald!");
+//            System.out.print("\naaald!");
         } catch (Exception e) {
             logger.error("Error handling delivery", e);
             channel.basicReject(delivery.getEnvelope().getDeliveryTag(), true);

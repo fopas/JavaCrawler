@@ -52,17 +52,18 @@ public class Main {
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
-        logger.info("The collection of information from each URL page is completed");
-
         ElasticSearchManager elasticsearchManager = new ElasticSearchManager();
-        elasticsearchManager.init();
-        logger.info("The index in the ElasticSearch database is initialized");
+        try {
+            elasticsearchManager.init();
+            logger.info("The index in the ElasticSearch database is initialized");
 
-        logger.info("Sending data to the database has started");
-        PublishInfo publishInfo = new PublishInfo(factory, QUERY_INFO, elasticsearchManager);
-        publishInfo.run();
-        System.out.print("\nувуууууууууууу");
-        logger.info("Sending data to the database has started");
+            logger.info("Sending data to the database has started");
+            PublishInfo publishInfo = new PublishInfo(factory, QUERY_INFO, elasticsearchManager);
+            publishInfo.run();
+            logger.info("Sending data to the database has started");
+        } finally {
+            elasticsearchManager.close();
+        }
 
         logger.info("App stopped");
     }

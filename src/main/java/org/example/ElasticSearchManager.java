@@ -74,7 +74,7 @@ public class ElasticSearchManager {
                         builder.index(INDEX_NAME)
                                 .query(query -> query.term(termQuery -> termQuery.field("hash").value(article.getHash()))),
                 Object.class);
-        System.out.print("\nHello, world!");
+//        System.out.print("\nHello, world!");
 
         return searchResponse.hits().total().value() != 0;
     }
@@ -84,10 +84,21 @@ public class ElasticSearchManager {
             IndexResponse response = client.index(index -> index
                     .index(INDEX_NAME)
                     .document(article));
-            System.out.print(article.getAuthor());
+//            System.out.print(article.getAuthor());
             logger.info("Document indexed successfully with hash: " + article.getHash());
         } catch (IOException e) {
             logger.error("Error indexing document with hash " + article.getHash(), e);
+        }
+    }
+
+    public void close() {
+        try {
+            if (client != null) {
+                ((RestClientTransport) client._transport()).restClient().close();
+                logger.info("Elasticsearch client closed");
+            }
+        } catch (IOException e) {
+            logger.error("Error closing Elasticsearch client", e);
         }
     }
 
