@@ -48,6 +48,7 @@ public class GetLink {
         int statusCode = connection.getResponseCode();
         switch (statusCode) {
             case 200:
+                logger.info("HTTP 200 for URL {}", url);
                 return Jsoup.parse(connection.getInputStream(), "UTF-8", url);
             case 403:
                 logger.error("HTTP 403 Forbidden: Access is denied for URL {}", url);

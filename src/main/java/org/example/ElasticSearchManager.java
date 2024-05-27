@@ -60,7 +60,7 @@ public class ElasticSearchManager {
                             .properties("url", p -> p.text(d -> d))
                             .properties("title", p -> p.text(d -> d))
                             .properties("text", p -> p.text(d -> d))
-                            .properties("author", p -> p.text(d -> d))
+                            .properties("author", p -> p.keyword(d -> d))
                             .properties("time", p -> p.date(d -> d))
                     ));
             logger.info(String.format("Index %s created successfully", INDEX_NAME));

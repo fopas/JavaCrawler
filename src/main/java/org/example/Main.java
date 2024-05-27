@@ -34,19 +34,26 @@ public class Main {
         channel.close();
         connection.close();
 
+        logger.info("The collection of links from the main url page has begun");
         GetLink getLink = new GetLink(URL, factory, QUERY_LINK);
         getLink.run();
+        logger.info("The collection of links from the main url page has ended");
 
+        logger.info("The collection of information from each URL page has begun");
         Parser parser = new Parser(factory, QUERY_LINK, QUERY_INFO);
         parser.run();
+        logger.info("The collection of information from each URL page is completed");
 
         ElasticSearchManager elasticsearchManager = new ElasticSearchManager();
         elasticsearchManager.init();
+        logger.info("The index in the ElasticSearch database is initialized");
 
+        logger.info("Sending data to the database has started");
         PublishInfo publishInfo = new PublishInfo(factory, QUERY_INFO, elasticsearchManager);
         publishInfo.run();
+        logger.info("Sending data to the database has started");
 
 
-        logger.info("Service stopped");
+        logger.info("App stopped");
     }
 }
