@@ -30,3 +30,79 @@
 7. Умейте составлять сложные полнотекстовые поисковые запросы (понимайте синтаксис полнотекстового поиска Elasticsearch).
 8. Выполняйте различные типы агрегаций (например, вывод гистограммы по количеству публикаций на различные даты и для различных авторов) + агрегации по логам, сохраненным через logstash.
 
+## Агрегация
+![Гистограмма авторов](/image/diagramamm.png "Гистограмма авторов")
+
+![Гистограмма logstash](/image/log.png "Гистограмма logstash")
+
+## Запросы
+### Запрос с использованием скрипта
+```
+GET /article/_search
+{
+  "query": {
+    "script_score": {
+      "query": {"match_all": {}},
+      "script": {
+        "source": "doc['author'].value.length()"
+      }
+    }
+  }
+}
+```
+![](/image/qSCRIPT.png "Запрос с использованием скрипта")
+
+### Запрос с использованием операторов логического поиска
+```
+GET /article/_search
+{
+  "query": {
+    "query_string": {
+      "query": "(Wildberries AND российского) NOT \"до свиданья\""
+    }
+  }
+}
+```
+![](/image/qANDNOT.png "Запрос с использованием операторов логического поиска")
+
+### MultiGet запрос
+```
+GET /article/_mget
+{
+  "docs": [
+    { "_id": "tXYiu48Bpz-yHQp52ORc" },
+    { "_id": "x3Zyu48Bpz-yHQp59-R_" }
+  ]
+}
+```
+![](/image/qMGET.png "MultiGet запрос")
+
+### multi_match запрос
+```
+GET /article/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "результаты",
+      "fields": [ "title", "text", "author" ]
+    }
+  }
+}
+```
+![](/image/qFIELDS.png "multi_match запрос")
+
+### Сложный поисковый запрос с использованием оператора "must" и оператора "match"
+```
+GET /article/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "title": "Positive" }},
+        { "match": { "text": "угроз" }}
+      ]
+    }
+  }
+}
+```
+![](/image/qCOMPLEX.png "Сложный поисковый запрос с использованием оператора must и оператора match")
