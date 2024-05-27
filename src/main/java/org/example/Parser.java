@@ -8,11 +8,14 @@ import org.slf4j.LoggerFactory;
 import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Класс для парсинга статей из очереди RabbitMQ.
+ * Считывает ссылки из очереди, загружает соответствующие статьи и публикует их содержимое в другую очередь.
+ */
 public class Parser implements Runnable {
 
     private final ConnectionFactory factory;
@@ -21,12 +24,26 @@ public class Parser implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Parser.class);
     private Channel channel;
 
+    /**
+     * Конструктор.
+     *
+     * @param factory   Фабрика соединений с RabbitMQ.
+     * @param queryLink Очередь, из которой считываются ссылки.
+     * @param queryInfo Очередь, в которую публикуется информация о статьях.
+     */
     public Parser(ConnectionFactory factory, String queryLink, String queryInfo) {
         this.factory = factory;
         this.queryLink = queryLink;
         this.queryInfo = queryInfo;
     }
 
+    /**
+     * Парсит статью по URL и хешу.
+     *
+     * @param url  URL статьи.
+     * @param hash Хеш статьи.
+     * @return JSON объект с информацией о статье.
+     */
     private JSONObject parseArticle(String url, String hash) {
         try {
             URL urlObj = new URL(url);
@@ -73,6 +90,12 @@ public class Parser implements Runnable {
         return null;
     }
 
+    /**
+     * Обрабатывает доставку сообщения из очереди.
+     *
+     * @param delivery Сообщение из очереди.
+     * @throws IOException Если возникает ошибка при обработке сообщения.
+     */
     private void handleDelivery(GetResponse delivery) throws IOException {
         try {
             String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -93,6 +116,10 @@ public class Parser implements Runnable {
         }
     }
 
+    /**
+     * Основной метод выполнения класса.
+     * Устанавливает соединение с RabbitMQ, считывает сообщения из очереди и обрабатывает их.
+     */
     @Override
     public void run() {
         try {

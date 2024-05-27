@@ -20,6 +20,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Класс для сбора ссылок с заданной страницы.
+ * Скачивает страницу, извлекает ссылки на статьи и публикует их в очередь RabbitMQ.
+ */
 public class GetLink {
 
     private final String url;
@@ -33,12 +37,24 @@ public class GetLink {
         this.query = query;
     }
 
+    /**
+     * Вычисление хеша SHA-256 для строки.
+     * @param input Входная строка.
+     * @return Хешированная строка.
+     * @throws NoSuchAlgorithmException Если алгоритм SHA-256 недоступен.
+     */
     private String computeHash(String input) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(hashBytes);
     }
 
+    /**
+     * Получение HTML-документа по URL.
+     * @param url URL страницы.
+     * @return HTML-документ.
+     * @throws IOException Если возникает ошибка при загрузке страницы.
+     */
     private Document getDocument(String url) throws IOException {
         URL urlObj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
@@ -65,6 +81,10 @@ public class GetLink {
         }
     }
 
+    /**
+     * Метод для запуска процесса сбора ссылок.
+     * Загружает страницу, извлекает ссылки на статьи, вычисляет их хеши и публикует в очередь RabbitMQ.
+     */
     public void run() {
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
